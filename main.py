@@ -1,7 +1,31 @@
+# Early import onnxruntime to avoid DLL conflict with PyQt6
+import onnxruntime
 import argparse
 import os
 import platform
+import sys
 from pathlib import Path
+
+# Add nvidia-cudnn-cu12 and nvidia-cublas-cu12 DLLs to the PATH
+# for Python 3.8+ on Windows
+if platform.system() == 'Windows':
+    # Find site-packages directory
+    site_packages = Path(sys.prefix) / 'Lib' / 'site-packages'
+    
+    # Path to nvidia packages bin
+    cudnn_bin = site_packages / 'nvidia' / 'cudnn' / 'bin'
+    cublas_bin = site_packages / 'nvidia' / 'cublas' / 'bin'
+    
+    # Add to system PATH if they exist
+    if cudnn_bin.exists():
+        os.environ['PATH'] = str(cudnn_bin) + os.pathsep + os.environ['PATH']
+        if hasattr(os, 'add_dll_directory'):
+            os.add_dll_directory(str(cudnn_bin))
+            
+    if cublas_bin.exists():
+        os.environ['PATH'] = str(cublas_bin) + os.pathsep + os.environ['PATH']
+        if hasattr(os, 'add_dll_directory'):
+            os.add_dll_directory(str(cublas_bin))
 
 from xlib import appargs as lib_appargs
 from xlib import os as lib_os

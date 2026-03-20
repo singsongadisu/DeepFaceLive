@@ -282,6 +282,8 @@ class CameraSourceWorker(BackendWorker):
             if self.bc_out.is_full_read(1):
                 self.bc_out.write(self.pending_bcd)
                 self.pending_bcd = None
+            else:
+                pass
 
         time.sleep(0.001)
 

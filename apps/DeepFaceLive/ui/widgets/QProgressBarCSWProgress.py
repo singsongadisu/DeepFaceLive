@@ -23,7 +23,7 @@ class QProgressBarCSWProgress(QCSWControl):
 
     def _on_csw_progress(self, progress):
         with qtx.BlockSignals(self._progressbar):
-            self._progressbar.setValue(progress)
+            self._progressbar.setValue(int(progress))
 
     def _on_csw_config(self, config : lib_csw.Progress.Config):
         title = config.get_title()

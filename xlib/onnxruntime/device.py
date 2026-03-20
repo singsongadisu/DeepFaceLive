@@ -185,4 +185,5 @@ def _initialize_ort_devices_info():
             os.environ[f'ORT_DEVICE_{i}_TOTAL_MEM'] = str(device['total_mem'])
             os.environ[f'ORT_DEVICE_{i}_FREE_MEM'] = str(device['free_mem'])
         
-_initialize_ort_devices_info()
+import multiprocessing
+_initialize_ort_devices_info() if multiprocessing.parent_process() is None else None

@@ -42,6 +42,7 @@ class QSliderCSWNumbers(QCSWControl):
     def _on_csw_idx(self, idx):
         #print('_on_csw_idx', idx)
         if idx is not None:
+            idx = int(idx)
             with qtx.BlockSignals([self._slider, self._spinbox_index]):
                 self._slider.setValue(idx+1)
                 self._spinbox_index.setValue(idx+1)
@@ -49,6 +50,7 @@ class QSliderCSWNumbers(QCSWControl):
     def _on_csw_idx_count(self, idx_count):
         #print('_on_csw_idx_count', idx_count)
         if idx_count is not None:
+            idx_count = int(idx_count)
             with qtx.BlockSignals([self._slider, self._spinbox_index, self._spinbox_count]):
                 self._slider.setMinimum(1)
                 self._slider.setMaximum(idx_count)

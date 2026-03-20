@@ -86,7 +86,6 @@ class FaceDetectorWorker(BackendWorker):
         cs.detector_type.set_choices(DetectorType, DetectorTypeNames, none_choice_name=None)
         cs.detector_type.select(state.detector_type if state.detector_type is not None else DetectorType.YOLOV5)
 
-
     def on_cs_detector_type(self, idx, detector_type):
         state, cs = self.get_state(), self.get_control_sheet()
 
@@ -213,6 +212,7 @@ class FaceDetectorWorker(BackendWorker):
                 is_frame_reemitted = bcd.get_is_frame_reemitted()
 
                 detector_type = state.detector_type
+                
                 if (detector_type == DetectorType.CENTER_FACE and self.CenterFace is not None) or \
                     (detector_type == DetectorType.S3FD and self.S3FD is not None) or \
                     (detector_type == DetectorType.YOLOV5 and self.YoloV5Face is not None):
@@ -232,6 +232,9 @@ class FaceDetectorWorker(BackendWorker):
                             rects = self.S3FD.extract (frame_image, threshold=detector_state.threshold, fixed_window=detector_state.fixed_window_size)[0]
                         elif detector_type == DetectorType.YOLOV5:
                             rects = self.YoloV5Face.extract (frame_image, threshold=detector_state.threshold, fixed_window=detector_state.fixed_window_size)[0]
+
+                        # Rectify inverted boxes
+                        rects = [ [min(l,r), min(t,b), max(l,r), max(t,b)] for l,t,r,b in rects ]
 
                         # to list of FaceURect
                         rects = [ FRect.from_ltrb( (l/W, t/H, r/W, b/H) ) for l,t,r,b in rects ]

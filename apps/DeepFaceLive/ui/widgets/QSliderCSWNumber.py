@@ -49,7 +49,7 @@ class QSliderCSWNumber(QCSWControl):
     def _on_csw_number(self, value):
         if value is not None:
             config = self._config
-            value = (value-config.min) / config.step
+            value = int( (value-config.min) / config.step )
             with qtx.BlockSignals([self._slider]):
                 self._slider.setValue(value)
 

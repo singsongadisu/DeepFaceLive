@@ -161,36 +161,43 @@ class FaceAlignerWorker(BackendWorker):
                             if fsi.face_pose is not None:
                                 head_yaw = fsi.face_pose.as_radians()[1]
                         
-                        face_ulmrks = fsi.face_ulmrks
-                        if face_ulmrks is not None:
-                            fsi.face_resolution = state.resolution
+                        fsi.face_resolution = state.resolution
+                        H, W = frame_image.shape[:2]
 
-                            H, W = frame_image.shape[:2]
-                            if state.align_mode == AlignMode.FROM_RECT:
-                                face_align_img, uni_mat = fsi.face_urect.cut(frame_image, coverage= state.face_coverage, output_size=state.resolution,
-                                                                             x_offset=state.x_offset, y_offset=state.y_offset)
+                        face_align_img = None
+                        uni_mat = None
 
-                            elif state.align_mode == AlignMode.FROM_POINTS:
+                        if state.align_mode == AlignMode.FROM_RECT:
+                            face_align_img, uni_mat = fsi.face_urect.cut(frame_image, coverage= state.face_coverage, output_size=state.resolution,
+                                                                         x_offset=state.x_offset, y_offset=state.y_offset)
+
+                        elif state.align_mode == AlignMode.FROM_POINTS:
+                            face_ulmrks = fsi.face_ulmrks
+                            if face_ulmrks is not None:
                                 face_align_img, uni_mat = face_ulmrks.cut(frame_image, state.face_coverage+ (1.0 if state.head_mode else 0.0), state.resolution,
                                                                           exclude_moving_parts=state.exclude_moving_parts,
                                                                           head_yaw=head_yaw,
                                                                           x_offset=state.x_offset,
                                                                           y_offset=state.y_offset-0.08 + (-0.50 if state.head_mode else 0.0),
                                                                           freeze_z_rotation=state.freeze_z_rotation)
-                            elif state.align_mode == AlignMode.FROM_STATIC_RECT:
-                                rect = FRect.from_ltrb([ 0.5 - (fsi.face_resolution/W)/2, 0.5 - (fsi.face_resolution/H)/2, 0.5 + (fsi.face_resolution/W)/2, 0.5 + (fsi.face_resolution/H)/2,])
-                                face_align_img, uni_mat = rect.cut(frame_image, coverage= state.face_coverage, output_size=state.resolution,
-                                                                             x_offset=state.x_offset, y_offset=state.y_offset)
+                        elif state.align_mode == AlignMode.FROM_STATIC_RECT:
+                            rect = FRect.from_ltrb([ 0.5 - (fsi.face_resolution/W)/2, 0.5 - (fsi.face_resolution/H)/2, 0.5 + (fsi.face_resolution/W)/2, 0.5 + (fsi.face_resolution/H)/2,])
+                            face_align_img, uni_mat = rect.cut(frame_image, coverage= state.face_coverage, output_size=state.resolution,
+                                                                         x_offset=state.x_offset, y_offset=state.y_offset)
+
+                        if face_align_img is not None:
 
                             fsi.face_align_image_name = f'{frame_image_name}_{face_id}_aligned'
                             fsi.image_to_align_uni_mat = uni_mat
-                            fsi.face_align_ulmrks = face_ulmrks.transform(uni_mat)
                             bcd.set_image(fsi.face_align_image_name, face_align_img)
 
-                            # Due to FaceAligner is not well loaded, we can make lmrks mask here
-                            face_align_lmrks_mask_img = fsi.face_align_ulmrks.get_convexhull_mask( face_align_img.shape[:2], color=(255,), dtype=np.uint8)
-                            fsi.face_align_lmrks_mask_name = f'{frame_image_name}_{face_id}_aligned_lmrks_mask'
-                            bcd.set_image(fsi.face_align_lmrks_mask_name, face_align_lmrks_mask_img)
+                            if fsi.face_ulmrks is not None:
+                                fsi.face_align_ulmrks = fsi.face_ulmrks.transform(uni_mat)
+
+                                # Due to FaceAligner is not well loaded, we can make lmrks mask here
+                                face_align_lmrks_mask_img = fsi.face_align_ulmrks.get_convexhull_mask( face_align_img.shape[:2], color=(255,), dtype=np.uint8)
+                                fsi.face_align_lmrks_mask_name = f'{frame_image_name}_{face_id}_aligned_lmrks_mask'
+                                bcd.set_image(fsi.face_align_lmrks_mask_name, face_align_lmrks_mask_img)
 
                 self.stop_profile_timing()
                 self.pending_bcd = bcd
